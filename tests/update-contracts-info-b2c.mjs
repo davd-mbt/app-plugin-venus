@@ -12,7 +12,7 @@ import PoolAbi from './networks/bnb-mainnet/venus/abis/venus_pool.json' assert {
 import vTokenAbi from './networks/bnb-mainnet/venus/abis/venus_vtokens.json' assert { type: 'json' };
 
 
-const VAULTS_URL = 'https://api.venus.io/vaults' // Get list of contracts from API server
+const VAULTS_URL = 'https://api.venus.io/vaults' // Get list of contracts from Venus API server
 
 const abisPath = './networks/bnb-mainnet/venus/abis/';
 const b2cFile = './networks/bnb-mainnet/venus/b2c';

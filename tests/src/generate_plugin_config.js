@@ -2,7 +2,7 @@
 // You will also need to create a `b2c.json` file that will hold the methodIDs and location of
 // the erc20 tokens that should get displayed.
 // EDIT THIS: replace with the name of your plugin (lowercase)
-const pluginFolder = "boilerplate";
+const pluginFolder = "venus";
 
 function serialize_data(pluginName, contractAddress, selector) {
 	const len = Buffer.from([pluginName.length]);
@@ -21,7 +21,7 @@ function assert(condition, message) {
 }
 
 // Function to generate the plugin configuration.
-function generate_plugin_config(network="ethereum") {
+function generate_plugin_config(network="bnb-testnet") {
 	
 	var fs = require('fs');
 	var files = fs.readdirSync(`networks/${network}/${pluginFolder}/abis/`);

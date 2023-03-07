@@ -3,7 +3,6 @@
 // List of selectors supported by this plugin.
 // EDIT THIS: Adapt the variable names and change the `0x` values to match your selectors.
 
-
 // *** Generic BEP20 token (USDT, USDC, BUSD etc.)
 
 //Function: approve(address spender, uint256 amount)

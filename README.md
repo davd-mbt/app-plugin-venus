@@ -16,6 +16,10 @@ It is STRONGLY recommended to follow the
 [plugin guide](https://developers.ledger.com/docs/dapp/nano-plugin/overview/)
 in order to better understand the flow and the context for plugins.
 
+## Developer Contact
+
+Dav Dumbledore follow on Twitter: @Davd_MBT
+
 ## Ethereum SDK
 
 Ethereum plugins need the [Ethereum SDK](https://github.com/LedgerHQ/ethereum-plugin-sdk).

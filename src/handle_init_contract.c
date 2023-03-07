@@ -1,7 +1,7 @@
-#include "boilerplate_plugin.h"
+#include "venus_plugin.h"
 
-static int find_selector(uint32_t selector, const uint32_t *selectors, size_t n, selector_t *out) {
-    for (selector_t i = 0; i < n; i++) {
+static int find_selector(uint32_t selector, const uint32_t *selectors, size_t n, venusSelector_t *out) {
+    for (venusSelector_t i = 0; i < n; i++) {
         if (selector == selectors[i]) {
             *out = i;
             return 0;
@@ -36,7 +36,7 @@ void handle_init_contract(void *parameters) {
     memset(context, 0, sizeof(*context));
 
     uint32_t selector = U4BE(msg->selector, 0);
-    if (find_selector(selector, BOILERPLATE_SELECTORS, NUM_SELECTORS, &context->selectorIndex)) {
+    if (find_selector(selector, VENUS_SELECTORS, NUM_VENUS_SELECTORS, &context->selectorIndex)) {
         msg->result = ETH_PLUGIN_RESULT_UNAVAILABLE;
         return;
     }
@@ -45,12 +45,107 @@ void handle_init_contract(void *parameters) {
     // EDIT THIS: Adapt the `cases`, and set the `next_param` to be the first parameter you expect
     // to parse.
     switch (context->selectorIndex) {
+
+        // *** Bep20
+        case BEP20_APPROVE:
+            context->next_param = BEP20_APPROVE;
+            break;
+
+        // *** Venus vTokens
+        case VENUS_MINT:
+            context->next_param = MINT_AMOUNT;
+            break;
+
+        case VENUS_REDEEM:
+            context->next_param = REDEEM_TOKENS;
+            break;
+
+        case VENUS_REDEEM_UNDERLYING:
+            context->next_param = REDEEM_AMOUNT;
+            break;
+
+        case VENUS_BORROW:
+            context->next_param = BORROW_AMOUNT;
+            break;
+
+        case VENUS_REPAY_BORROW:
+            context->next_param = REPAY_AMOUNT;
+            break;
+
+        case VENUS_REPAY_BORROW_ON_BEHALF:
+            context->next_param = BORROWER;
+            break;
+
+        case VENUS_PROVIDE_COLLATERAL:
+            context->next_param = COLLATERAL_TOKENS;
+            break;
+
+        case VENUS_REMOVE_COLLATERAL:
+            context->next_param = COLLATERAL_VTOKEN;
+            break;
+
+        // *** Vaults ***
+        case VAULT_DEPOSIT:
+            context->next_param = DEPOSIT_AMOUNT;
+            break;
+        
+        case VAULT_DEPOSIT_TOKEN:
+        case VAULT_WITHDRAW_TOKEN_EXECUTE:
+        case VAULT_WITHDRAW_TOKEN_REQUEST:
+            context->next_param = REWARD_TOKEN;
+            break;
+
+        case VAULT_WITHDRAW_VAI:
+        case VAULT_WITHDRAW_VRT:
+            context->next_param = WITHDRAW_AMOUNT;
+            break;
+                
+        case VAULT_CLAIM:
+            context->next_param = VAULT_NAME;
+            break;            
+
+        // *** Governance ***
+
+        case VENUS_DELEGATE_VOTE:
+            context->next_param = DELEGATEE;
+            break;
+
+        case VENUS_MAKE_PROPOSAL:
+            context->next_param = PROPOSAL_TITLE;
+            break;
+
+        case VENUS_CAST_VOTE:
+        case VENUS_VOTE_WITH_REASON:
+            context->next_param = PROPOSAL_ID;
+            break;
+
+        case VENUS_CONVERT_VRT:
+            context->next_param = VRT_AMOUNT;
+            break;
+
+        case VENUS_WITHDRAW_VESTED_XVS:
+            context->next_param = CLAIM_XVS;
+            break;
+
+        // *** Swap ***
+        case SWAP_EXACT_TOKENS_FOR_TOKENS:
+        case SWAP_EXACT_TOKENS_FOR_ETH:
+            context->next_param = AMOUNT_SENT;
+            break;
+
+        case SWAP_TOKENS_FOR_EXACT_TOKENS:
         case SWAP_EXACT_ETH_FOR_TOKENS:
-            context->next_param = MIN_AMOUNT_RECEIVED;
+        case SWAP_ETH_FOR_EXACT_TOKENS:
+        case SWAP_TOKENS_FOR_EXACT_ETH:
+            context->next_param = AMOUNT_RECEIVED;
             break;
-        case BOILERPLATE_DUMMY_2:
-            context->next_param = TOKEN_RECEIVED;
+
+        // *** VAI ***
+        case VENUS_MINT_VAI:
+        case VENUS_REPAY_VAI:        
+            context->next_param = VAI_AMOUNT;
             break;
+
         // Keep this
         default:
             PRINTF("Missing selectorIndex: %d\n", context->selectorIndex);
