@@ -42,8 +42,6 @@ void handle_init_contract(void *parameters) {
     }
 
     // Set `next_param` to be the first field we expect to parse.
-    // EDIT THIS: Adapt the `cases`, and set the `next_param` to be the first parameter you expect
-    // to parse.
     switch (context->selectorIndex) {
 
         // *** Bep20

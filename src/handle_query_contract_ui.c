@@ -556,7 +556,7 @@ void handle_query_contract_ui(void *parameters) {
     }
 
     /* Boilerplate example to process by screen index
-    // EDIT THIS: Adapt the cases for the screens you'd like to display.
+    // Adapt the cases for the screens you'd like to display.
     switch (msg->screenIndex) {
         case 0:
             set_first_param_ui(msg);

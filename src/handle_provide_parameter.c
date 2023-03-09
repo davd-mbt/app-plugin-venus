@@ -441,7 +441,7 @@ void handle_provide_parameter(void *parameters) {
         }
         context->offset = 0;  // Reset offset
 
-    // EDIT THIS: adapt the cases and the names of the functions.
+    // adapt the cases and the names of the functions.
 
         switch (context->selectorIndex) {
 

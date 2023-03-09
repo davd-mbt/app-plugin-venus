@@ -1,7 +1,6 @@
 #include "venus_plugin.h"
 
 // List of selectors supported by this plugin.
-// EDIT THIS: Adapt the variable names and change the `0x` values to match your selectors.
 
 // *** Generic BEP20 token (USDT, USDC, BUSD etc.)
 
@@ -160,7 +159,7 @@ static const uint32_t VENUS_REPAY_VAI_SELECTOR = 0x6fe74a21;
 
 // Array of all the different boilerplate selectors. Make sure this follows the same order as the
 // enum defined in `venus_plugin.h`
-// EDIT THIS: Use the names of the array declared above.
+// Use the names of the array declared above.
 const uint32_t VENUS_SELECTORS[NUM_VENUS_SELECTORS] = {
     BEP20_APPROVE_SELECTOR,
     VENUS_MINT_SELECTOR,

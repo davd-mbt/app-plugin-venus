@@ -21,7 +21,6 @@ endif
 
 include $(BOLOS_SDK)/Makefile.defines
 
-# EDIT THIS: Put your plugin name
 APPNAME = "Venus"
 
 ifeq ($(ETHEREUM_PLUGIN_SDK),)
@@ -163,5 +162,4 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 listvariants:
-        # EDIT THIS: replace `boilerplate` by the lowercase name of your plugin
 	@echo VARIANTS NONE venus
