@@ -1,4 +1,4 @@
-# app-plugin-boilerplate
+# app-plugin-venus
 
 This repo contains a ledger plugin for the Venus Protocol smart contract on BnbChain.
 
