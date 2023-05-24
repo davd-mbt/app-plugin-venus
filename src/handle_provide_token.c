@@ -11,18 +11,16 @@ void handle_provide_token(void *parameters) {
            msg->item2->token.address);
 
     if (ADDRESS_IS_NETWORK_TOKEN(context->contract_address_sent)) {
-        context->ticker_sent = msg.network_ticker;
+        strlcpy(context->ticker_sent, DEFAULT_NETWORK_TICKER, sizeof(context->ticker_sent));
         context->decimals_sent = WEI_TO_ETHER;
         context->token1_found = true;
     } else if (msg->item1) {
         // The app found the information for the requested token!
-    
-
+        
         // Store its decimals.
         context->decimals_sent = msg->item1->token.decimals;
         // Store its ticker.
         strlcpy(context->ticker_sent, (char *) msg->item1->token.ticker, sizeof(context->ticker_sent));
-
         // Keep track that we found the token.
         context->token1_found = true;
     } else {
@@ -37,7 +35,7 @@ void handle_provide_token(void *parameters) {
 
     // Second token mostly relevant with SWAP
     if (ADDRESS_IS_NETWORK_TOKEN(context->contract_address_received)) {
-        context->ticker_received = msg.network_ticker;
+        strlcpy(context->ticker_received, DEFAULT_NETWORK_TICKER, sizeof(context->ticker_received));
         context->decimals_received = WEI_TO_ETHER;
         context->token2_found = true;        
     } else if (msg->item2) {
@@ -45,8 +43,7 @@ void handle_provide_token(void *parameters) {
         // Store its decimals.
         context->decimals_received = msg->item2->token.decimals;
         // Store its ticker.
-        strlcpy(context->ticker_received, (char *) msg->item1->token.ticker, sizeof(context->ticker_received));
-
+        strlcpy(context->ticker_received, (char *) msg->item2->token.ticker, sizeof(context->ticker_received));
         // Keep track that we found the token.
         context->token2_found = true;
     } else {

@@ -10,7 +10,20 @@ static void set_sent_amount_eth_ui(ethQueryContractUI_t *msg) {
 
     // Converts the uint256 number located in `eth_amount` to its string representation and
     // copies this to `msg->msg`.
-    amountToString(eth_amount, eth_amount_size, WEI_TO_ETHER, "ETH", msg->msg, msg->msgLength);
+    amountToString(eth_amount, eth_amount_size, WEI_TO_ETHER, msg->network_ticker, msg->msg, msg->msgLength);
+}
+
+// Set UI for the "Receive" screen as ETH. Does not set title
+static void set_receive_amount_eth_ui(ethQueryContractUI_t *msg, const context_t *context) {
+
+    // copies this to `msg->msg`.
+    amountToString(context->amount_received,
+                   sizeof(context->amount_received),
+                   WEI_TO_ETHER,
+                   msg->network_ticker,
+                   msg->msg,
+                   msg->msgLength);
+
 }
 
 // Set UI for "Receive" screen. Does not set Title
@@ -20,11 +33,11 @@ static void set_received_amount_ui(ethQueryContractUI_t *msg, const context_t *c
     const char *ticker = context->ticker_received;
 
     // If the token look up failed, use the default network ticker along with the default decimals.
-    if (!context->token2_found) {
+ /*   if (!context->token2_found) {
         decimals = WEI_TO_ETHER;
         ticker = msg->network_ticker;
-    }
-
+    } 
+*/
     amountToString(context->amount_received,
                    sizeof(context->amount_received),
                    decimals,
@@ -46,9 +59,11 @@ static void set_beneficiary_ui(ethQueryContractUI_t *msg, context_t *context) {
     getEthDisplayableAddress(
         context->beneficiary,
         msg->msg,
+        msg->msgLength,
         msg->pluginSharedRW->sha3,
         chainid);
 }
+
 
 /* If we processed by screen 
 // Set UI for First param screen
@@ -75,7 +90,6 @@ static void set_first_param_ui(ethQueryContractUI_t *msg, context_t *context) {
 void handle_query_contract_ui(void *parameters) {
     ethQueryContractUI_t *msg = (ethQueryContractUI_t *) parameters;
     context_t *context = (context_t *) msg->pluginContext;
-
     // msg->title is the upper line displayed on the device.
     // msg->msg is the lower line displayed on the device.
 
@@ -95,11 +109,13 @@ void handle_query_contract_ui(void *parameters) {
         case BEP20_APPROVE:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Approve Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Enable token", msg->titleLength);
+                    
+                    /* if we want to display the amount being approved, use this
                     if (ismaxint(context->amount_sent, sizeof(context->amount_sent))) {
                         strlcpy(msg->msg, "Unlimited ", msg->msgLength);
                         strlcat(msg->msg, context->ticker_sent, msg->msgLength);
-                    } else {
+                    } else { 
                         amountToString(context->amount_sent,
                                        sizeof(context->amount_sent),
                                        context->decimals_sent,
@@ -107,19 +123,32 @@ void handle_query_contract_ui(void *parameters) {
                                        msg->msg,
                                        msg->msgLength);
                     }
+                    otherwise just display the TOKEN_SYMBOL */
+            
+                    strlcpy(msg->msg, context->ticker_sent, msg->msgLength);
                     break;
+                /* Removed from Spec - Spender not required
                 case 1:
                     strlcpy(msg->title, "Venus spender.", msg->titleLength);
                     strlcpy(msg->msg, context->ticker_received, msg->msgLength);
+                    break; */
+            }
+            break;
+
+        // *** Venus vTokens and vBnb
+        case VENUS_MINT_BNB:
+            switch (msg->screenIndex) {
+                case 0:
+                    strlcpy(msg->title, "Supply", msg->titleLength);
+                    set_sent_amount_eth_ui(msg);
                     break;
             }
             break;
 
-        // *** Venus vTokens
         case VENUS_MINT:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Supply to Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Supply", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -133,7 +162,7 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_REDEEM:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Withdraw from Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Withdraw", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -147,7 +176,7 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_REDEEM_UNDERLYING:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Withdraw from Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Withdraw", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -161,7 +190,7 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_BORROW:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Borrow from Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Borrow", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -172,10 +201,19 @@ void handle_query_contract_ui(void *parameters) {
             }
             break;
 
+        case VENUS_REPAY_BORROW_BNB:
+            switch (msg->screenIndex) {
+                case 0:
+                    strlcpy(msg->title, "Repay", msg->titleLength);
+                    set_sent_amount_eth_ui(msg);
+                    break;
+            }
+            break;
+
         case VENUS_REPAY_BORROW:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Repay to Venus.", msg->titleLength);
+                    strlcpy(msg->title, "Repay", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -189,35 +227,37 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_REPAY_BORROW_ON_BEHALF:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Repay to Venus.", msg->titleLength);
-                    amountToString(context->amount_sent,
+                    strlcpy(msg->title, "Repay", msg->titleLength);
+                    set_sent_amount_eth_ui(msg);
+                    /*amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
                                    context->ticker_sent,
                                    msg->msg,
-                                   msg->msgLength);
+                                   msg->msgLength); */
                     break;
+                /* Removed from Spec  - Beneficiary not required
                 case 1:
                     strlcpy(msg->title, "On behalf of.", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
         case VENUS_PROVIDE_COLLATERAL:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Enable collateral.", msg->titleLength);
+                    strlcpy(msg->title, "Enable collateral", msg->titleLength);
                     strlcpy(msg->msg, context->ticker_sent, msg->msgLength);
                     break;
             }
             break;
-            //msg->tokenLookup1 = context->contract_address_sent; TODO: when provide_parameter has passed address[] array
 
         case VENUS_REMOVE_COLLATERAL:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Disable collateral.", msg->titleLength);
+                    strlcpy(msg->title, "Disable collateral", msg->titleLength);
                     strlcpy(msg->msg, context->ticker_sent, msg->msgLength);
                     break;
             }
@@ -227,7 +267,7 @@ void handle_query_contract_ui(void *parameters) {
         case VAULT_DEPOSIT:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Stake.", msg->titleLength);
+                    strlcpy(msg->title, "Stake", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -241,7 +281,7 @@ void handle_query_contract_ui(void *parameters) {
         case VAULT_DEPOSIT_TOKEN:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Stake.", msg->titleLength);
+                    strlcpy(msg->title, "Stake", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -255,7 +295,7 @@ void handle_query_contract_ui(void *parameters) {
         case VAULT_WITHDRAW_TOKEN_EXECUTE:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Execute withdraw.", msg->titleLength);
+                    strlcpy(msg->title, "Execute withdrawal", msg->titleLength);
                     break;
             }
             break;
@@ -263,7 +303,7 @@ void handle_query_contract_ui(void *parameters) {
         case VAULT_WITHDRAW_TOKEN_REQUEST:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Request withdraw.", msg->titleLength);
+                    strlcpy(msg->title, "Request withdrawal", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -274,31 +314,40 @@ void handle_query_contract_ui(void *parameters) {
             }
             break;
             //msg->tokenLookup1 = context->contract_address_sent; // Reward Token
-            break;
+            //break;
 
         case VAULT_WITHDRAW_VAI:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Withdraw stake.", msg->titleLength);
-                    strlcpy(msg->msg, "from VAI vault", msg->msgLength);
+                    strlcpy(msg->title, "Withdraw", msg->titleLength);
+                    amountToString(context->amount_sent,
+                                   sizeof(context->amount_sent),
+                                   context->decimals_sent,
+                                   context->ticker_sent,
+                                   msg->msg,
+                                   msg->msgLength);
                     break;
             }
             break;
 
-        case VAULT_WITHDRAW_VRT:               
+        case VAULT_WITHDRAW_VRTXVS:               
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Withdraw stake.", msg->titleLength);
-                    strlcpy(msg->msg, "from VRT vault", msg->msgLength);
+                    strlcpy(msg->title, "Withdraw ", msg->titleLength);
+                    strlcat(msg->title, context->ticker_sent, msg->titleLength);
+                    strlcpy(msg->msg, "Entire stake", msg->msgLength);
                     break;
             }
             break;
 
-        case VAULT_CLAIM:
+        case VAULT_CLAIM:       
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Claim reward.", msg->titleLength);
-                    strlcpy(msg->msg, "from Venus vault", msg->msgLength);
+                    strlcpy(msg->title, "Claim", msg->titleLength);
+                    strlcpy(msg->msg, context->ticker_received, msg->msgLength);
+                    strlcat(msg->msg, " from ", msg->msgLength);
+                    strlcat(msg->msg, context->ticker_sent, msg->msgLength);
+                    strlcat(msg->msg, " vault", msg->msgLength);
                     break;
             }
             break;            
@@ -307,46 +356,67 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_DELEGATE_VOTE:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Delegate Vote.", msg->titleLength);
-                    amountToString(context->amount_sent,
-                                   sizeof(context->amount_sent),
-                                   context->decimals_sent,
-                                   context->ticker_sent,
-                                   msg->msg,
-                                   msg->msgLength);
-                    break;
-                case 1:
-                    strlcpy(msg->title, "Delegate to.", msg->titleLength);
+                    strlcpy(msg->title, "Delegate to", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
             }
             break;
 
         case VENUS_MAKE_PROPOSAL:
+            PRINTF("Screens Set: %d\n", context->decimals_sent);
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Create proposal.", msg->titleLength);
-                    set_beneficiary_ui(msg, context);
+                    strlcpy(msg->title, "Create proposal", msg->titleLength);
+                    memcpy(msg->msg, context->amount_sent, MIN(msg->msgLength, sizeof(context->amount_sent)));
+                    break;
+                case 1:
+                    strlcpy(msg->title, "Create proposal", msg->titleLength);
+                    memcpy(msg->msg, context->amount_received, MIN(msg->msgLength, sizeof(context->amount_received)));
+                    break;
+                case 2:
+                    strlcpy(msg->title, "Create proposal", msg->titleLength);
+                    memcpy(msg->msg, context->beneficiary, MIN(msg->msgLength, sizeof(context->beneficiary)));
                     break;
             }
             break;
 
         case VENUS_CAST_VOTE:
         case VENUS_VOTE_WITH_REASON:
+            PRINTF("VIP: %d\n", context->amount_sent);
+            PRINTF("Vote: %d\n", context->decimals_sent);
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Cast voote.", msg->titleLength);
-                    // msg[0] = 'V', msg[1] = 'I', msg[2] = 'P', msg + 3    TODO:
-                    amountToString(context->amount_sent,                    //Proposal ID
+                    strlcpy(msg->title, "Vote", msg->titleLength);
+                    // msg[0] = 'V', msg[1] = 'I', msg[2] = 'P', msg + 3    TODO: - not in spec but could prove useful to display the VIP number
+                    amountToString(context->amount_sent,                    //Proposal ID + VIP
                                    sizeof(context->amount_sent),
                                    0,
-                                   'VIP',
+                                   "VIP",
                                    msg->msg,
                                    msg->msgLength);
                     break;
                 case 1:
-                    strlcpy(msg->title, "Your vote", msg->titleLength);     //TODO:   
-                    strlcpy(msg->msg, "for", msg->msgLength);               // Process SUPPORT param stored in context.amount_received
+                    strlcpy(msg->title, "Vote", msg->titleLength);     //Process SUPPORT param stored in context->decimals_sent
+
+                    if (context->decimals_sent == 0 ) {
+                        strlcpy(msg->msg, "against", msg->msgLength);
+                    }
+                    else {  if (context->decimals_sent == 1) {
+                                strlcpy(msg->msg, "for", msg->msgLength);
+                            }
+                            else {  if (context->decimals_sent == 2) {
+                                        strlcpy(msg->msg, "abstain", msg->msgLength); 
+                                    }
+                                    else { strlcpy(msg->msg, "invalid", msg->msgLength);
+                                    }
+                            } 
+                    }
+                    break;
+
+                case 2:
+                    strlcpy(msg->title, "Vote Reason", msg->titleLength);            //Process REASON
+                    memcpy(msg->msg, context->amount_received, MIN(msg->msgLength, sizeof(context->amount_received)));
+                    //strlcpy(msg->msg, context->amount_received, msg->msgLength);     //stored in context->amount_received
                     break;
             }
             break;
@@ -355,25 +425,11 @@ void handle_query_contract_ui(void *parameters) {
         case VENUS_CONVERT_VRT:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Convert to XVS.", msg->titleLength);
+                    strlcpy(msg->title, "Convert VRT to XVS", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
-                                   context->decimals_sent,
-                                   context->ticker_sent,
-                                   msg->msg,
-                                   msg->msgLength);
-                    break;
-            }
-            break;
-
-        case VENUS_WITHDRAW_VESTED_XVS:
-            switch (msg->screenIndex) {
-                case 0:
-                    strlcpy(msg->title, "Withdraw XVS.", msg->titleLength);
-                    amountToString(context->amount_sent,
-                                   sizeof(context->amount_sent),
-                                   context->decimals_sent,
-                                   context->ticker_sent,
+                                   18,
+                                   "VRT",
                                    msg->msg,
                                    msg->msgLength);
                     break;
@@ -384,7 +440,7 @@ void handle_query_contract_ui(void *parameters) {
         case SWAP_EXACT_TOKENS_FOR_TOKENS:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send max.", msg->titleLength);
+                    strlcpy(msg->title, "Send", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -394,14 +450,15 @@ void handle_query_contract_ui(void *parameters) {
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive min.", msg->titleLength);
+                    strlcpy(msg->title, "Receive minimum", msg->titleLength);
                     set_received_amount_ui(msg, context);
                     break;
-
+                /*Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
@@ -410,7 +467,7 @@ void handle_query_contract_ui(void *parameters) {
             // msg->tokenLookup2 = context->contract_address_received;
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send min.", msg->titleLength);
+                    strlcpy(msg->title, "Send maximum", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -420,21 +477,23 @@ void handle_query_contract_ui(void *parameters) {
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive max.", msg->titleLength);
+                    strlcpy(msg->title, "Receive", msg->titleLength);
                     set_received_amount_ui(msg, context);
                     break;
 
+                /*Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
         case SWAP_EXACT_TOKENS_FOR_ETH:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send max.", msg->titleLength);
+                    strlcpy(msg->title, "Send", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -444,14 +503,16 @@ void handle_query_contract_ui(void *parameters) {
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive min.", msg->titleLength);
-                    set_received_amount_ui(msg, context);
+                    strlcpy(msg->title, "Receive mimimum", msg->titleLength);
+                    set_receive_amount_eth_ui(msg, context);
                     break;
 
+                /*Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
@@ -459,7 +520,7 @@ void handle_query_contract_ui(void *parameters) {
             // msg->tokenLookup1 = context->contract_address_sent;
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send min.", msg->titleLength);
+                    strlcpy(msg->title, "Send maximum", msg->titleLength);
                     amountToString(context->amount_sent,
                                    sizeof(context->amount_sent),
                                    context->decimals_sent,
@@ -469,33 +530,37 @@ void handle_query_contract_ui(void *parameters) {
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive max.", msg->titleLength);
-                    set_received_amount_ui(msg, context);
+                    strlcpy(msg->title, "Receive", msg->titleLength);
+                    set_receive_amount_eth_ui(msg, context);
                     break;
 
+                /*Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
         case SWAP_EXACT_ETH_FOR_TOKENS:
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send max.", msg->titleLength);
-                    set_sent_amount_eth_ui(msg, context);
+                    strlcpy(msg->title, "Send", msg->titleLength);
+                    set_sent_amount_eth_ui(msg);
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive min.", msg->titleLength);
+                    strlcpy(msg->title, "Receive minimum", msg->titleLength);
                     set_received_amount_ui(msg, context);
                     break;
 
+                /* Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 
@@ -503,19 +568,21 @@ void handle_query_contract_ui(void *parameters) {
             // msg->tokenLookup2 = context->contract_address_received;
             switch (msg->screenIndex) {
                 case 0:
-                    strlcpy(msg->title, "Swap send min.", msg->titleLength);
-                    set_sent_amount_eth_ui(msg, context);
+                    strlcpy(msg->title, "Send maximum", msg->titleLength);
+                    set_sent_amount_eth_ui(msg);
                     break;
 
                 case 1:
-                    strlcpy(msg->title, "Receive max.", msg->titleLength);
+                    strlcpy(msg->title, "Receive minimum", msg->titleLength);
                     set_received_amount_ui(msg, context);
                     break;
 
+                /*Removed from spec - do we need this?
                 case 2: 
                     strlcpy(msg->title, "Beneficiary", msg->titleLength);
                     set_beneficiary_ui(msg, context);
                     break;
+                */
             }
             break;
 

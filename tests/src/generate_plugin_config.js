@@ -21,7 +21,7 @@ function assert(condition, message) {
 }
 
 // Function to generate the plugin configuration.
-function generate_plugin_config(network="bnb-testnet") {
+function generate_plugin_config(network="bnb-mainnet") {
 	
 	var fs = require('fs');
 	var files = fs.readdirSync(`networks/${network}/${pluginFolder}/abis/`);

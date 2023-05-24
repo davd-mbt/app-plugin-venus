@@ -9,7 +9,11 @@
 static const uint32_t BEP20_APPROVE_SELECTOR = 0x095ea7b3;
 
 
-//***   VENUS vTokens  ***
+//***   VENUS vTokens  and vBnb***
+
+//Function: mint()
+//MethodID: 0x1249c58b
+static const uint32_t VENUS_MINT_BNB_SELECTOR = 0x1249c58b;
 
 //Function: mint(uint256 mintAmount)
 //MethodID: 0xa0712d68
@@ -30,6 +34,10 @@ static const uint32_t VENUS_BORROW_SELECTOR = 0xc5ebeaec;
 //Function: repayBorrow(uint256 repayAmount)
 //MethodID: 0x0e752702
 static const uint32_t VENUS_REPAY_BORROW_SELECTOR = 0x0e752702;
+
+//Function: repayBorrow()
+//MethodID: 0x4e4d9fea
+static const uint32_t VENUS_REPAY_BORROW_BNB_SELECTOR = 0x4e4d9fea;
 
 //*** VENUS Maximillion
 
@@ -77,9 +85,9 @@ static const uint32_t VAULT_DEPOSIT_TOKEN_SELECTOR = 0x0efe6a8b;
 static const uint32_t VAULT_WITHDRAW_VAI_SELECTOR = 0x2e1a7d4d;
 
 //VRT
-//Function: withdraw(uint256 _amount)
+//Function: withdraw()
 //MethodID: 0x3ccfd60b
-static const uint32_t VAULT_WITHDRAW_VRT_SELECTOR = 0x3ccfd60b;
+static const uint32_t VAULT_WITHDRAW_VRTXVS_SELECTOR = 0x3ccfd60b;
 
 //Function: requestWithdrawal(address _rewardToken, uint256 _pid, uint256 _amount)
 //MethodID: 0x115b512f
@@ -119,7 +127,8 @@ static const uint32_t VENUS_CONVERT_VRT_SELECTOR = 0xa3908e1b;
 
 //Function: withdraw()
 //MethodID: 0x3ccfd60b
-static const uint32_t VENUS_WITHDRAW_VESTED_XVS_SELECTOR = 0x3ccfd60b;
+// duplicated above with VAULT_WITHDRAW_VRT_SELECTOR now changed to VAULT_WITHDRAW_VRTXVS_SELECTOR
+//static const uint32_t VENUS_WITHDRAW_VESTED_XVS_SELECTOR = 0x3ccfd60b;
 
 //***   VENUS SWAP  ***
 
@@ -162,18 +171,20 @@ static const uint32_t VENUS_REPAY_VAI_SELECTOR = 0x6fe74a21;
 // Use the names of the array declared above.
 const uint32_t VENUS_SELECTORS[NUM_VENUS_SELECTORS] = {
     BEP20_APPROVE_SELECTOR,
+    VENUS_MINT_BNB_SELECTOR,
     VENUS_MINT_SELECTOR,
     VENUS_REDEEM_UNDERLYING_SELECTOR,
     VENUS_REDEEM_SELECTOR,
     VENUS_BORROW_SELECTOR,
     VENUS_REPAY_BORROW_SELECTOR,
+    VENUS_REPAY_BORROW_BNB_SELECTOR,
     VENUS_REPAY_BORROW_ON_BEHALF_SELECTOR,
     VENUS_PROVIDE_COLLATERAL_SELECTOR,
     VENUS_REMOVE_COLLATERAL_SELECTOR,
     VAULT_DEPOSIT_SELECTOR,
     VAULT_DEPOSIT_TOKEN_SELECTOR,
     VAULT_WITHDRAW_VAI_SELECTOR,
-    VAULT_WITHDRAW_VRT_SELECTOR,
+    VAULT_WITHDRAW_VRTXVS_SELECTOR,
     VAULT_WITHDRAW_TOKEN_REQUEST_SELECTOR,
     VAULT_WITHDRAW_TOKEN_EXECUTE_SELECTOR,
     VAULT_CLAIM_SELECTOR,
@@ -182,7 +193,6 @@ const uint32_t VENUS_SELECTORS[NUM_VENUS_SELECTORS] = {
     VENUS_CAST_VOTE_SELECTOR,
     VENUS_VOTE_WITH_REASON_SELECTOR,
     VENUS_CONVERT_VRT_SELECTOR,
-    VENUS_WITHDRAW_VESTED_XVS_SELECTOR,
     SWAP_EXACT_TOKENS_FOR_TOKENS_SELECTOR,
     SWAP_EXACT_ETH_FOR_TOKENS_SELECTOR,
     SWAP_EXACT_TOKENS_FOR_ETH_SELECTOR,
@@ -192,3 +202,13 @@ const uint32_t VENUS_SELECTORS[NUM_VENUS_SELECTORS] = {
     VENUS_MINT_VAI_SELECTOR,
     VENUS_REPAY_VAI_SELECTOR,
 };
+
+// using `0xeeeee` as a dummy address to represent ETH/BNB
+const uint8_t VENUS_ETH_ADDRESS[ADDRESS_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                       0x00, 0x00, 0x00, 0x00, 0x10, 0x10};
+
+// Used to indicate that the beneficiary should be the sender.
+const uint8_t NULL_ETH_ADDRESS[ADDRESS_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00};

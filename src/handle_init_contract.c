@@ -25,7 +25,9 @@ void handle_init_contract(void *parameters) {
     // Double check that the `context_t` struct is not bigger than the maximum size (defined by
     // `msg->pluginContextLength`).
     if (msg->pluginContextLength < sizeof(context_t)) {
-        PRINTF("Plugin parameters structure is bigger than allowed size\n");
+        PRINTF("Venus content size is bigger than allowed: expected %d got %d \n",
+                sizeof(context_t),
+                msg->pluginContextLength);
         msg->result = ETH_PLUGIN_RESULT_ERROR;
         return;
     }
@@ -49,7 +51,12 @@ void handle_init_contract(void *parameters) {
             context->next_param = BEP20_APPROVE;
             break;
 
-        // *** Venus vTokens
+        // *** Venus vTokens and vBNB
+
+        case VENUS_MINT_BNB:
+            context->next_param = UNEXPECTED_PARAMETER;
+            break;
+
         case VENUS_MINT:
             context->next_param = MINT_AMOUNT;
             break;
@@ -70,12 +77,16 @@ void handle_init_contract(void *parameters) {
             context->next_param = REPAY_AMOUNT;
             break;
 
+        case VENUS_REPAY_BORROW_BNB:
+            context->next_param = UNEXPECTED_PARAMETER;
+            break;
+
         case VENUS_REPAY_BORROW_ON_BEHALF:
             context->next_param = BORROWER;
             break;
 
         case VENUS_PROVIDE_COLLATERAL:
-            context->next_param = COLLATERAL_TOKENS;
+            context->next_param = COLLATERAL_TOKENS_OFFSET;
             break;
 
         case VENUS_REMOVE_COLLATERAL:
@@ -94,12 +105,15 @@ void handle_init_contract(void *parameters) {
             break;
 
         case VAULT_WITHDRAW_VAI:
-        case VAULT_WITHDRAW_VRT:
             context->next_param = WITHDRAW_AMOUNT;
             break;
-                
+
+        case VAULT_WITHDRAW_VRTXVS:
+            context->next_param = UNEXPECTED_PARAMETER;
+            break;
+
         case VAULT_CLAIM:
-            context->next_param = VAULT_NAME;
+            context->next_param = UNEXPECTED_PARAMETER;
             break;            
 
         // *** Governance ***
@@ -109,7 +123,7 @@ void handle_init_contract(void *parameters) {
             break;
 
         case VENUS_MAKE_PROPOSAL:
-            context->next_param = PROPOSAL_TITLE;
+            context->next_param = PROPOSAL_TARGETS_OFFSET;
             break;
 
         case VENUS_CAST_VOTE:
@@ -119,10 +133,6 @@ void handle_init_contract(void *parameters) {
 
         case VENUS_CONVERT_VRT:
             context->next_param = VRT_AMOUNT;
-            break;
-
-        case VENUS_WITHDRAW_VESTED_XVS:
-            context->next_param = CLAIM_XVS;
             break;
 
         // *** Swap ***

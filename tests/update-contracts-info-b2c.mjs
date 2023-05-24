@@ -1,4 +1,4 @@
-// Run this script to update Harvest vaults and pools to contracts-info.txt and b2c.json
+// Experimental - do not use
 
 import fetch from 'isomorphic-fetch';
 import fs from 'fs';
@@ -163,4 +163,4 @@ function saveString(filename, text) {
   });
 }
 
-updateContractsInfo(VAULTS_URL).then();
+// Experimental do not use - updateContractsInfo(VAULTS_URL).then();

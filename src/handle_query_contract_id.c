@@ -10,24 +10,28 @@ void handle_query_contract_id(void *parameters) {
     // For the first screen, display the plugin name.
     strlcpy(msg->name, PLUGIN_NAME, msg->nameLength);
     
+    //assume success
+    msg->result = ETH_PLUGIN_RESULT_OK;
+
     switch (context->selectorIndex) {
 
         // *** Bep20
         case BEP20_APPROVE:
-            strlcpy(msg->version, "Enable", msg->versionLength);
+            strlcpy(msg->version, "Enable token", msg->versionLength);
             break;
 
-        // *** Venus vTokens ***
+        // *** Venus vTokens and vBnb***
+        case VENUS_MINT_BNB:
         case VENUS_MINT:
-            strlcpy(msg->version, "Mint", msg->versionLength);
+            strlcpy(msg->version, "Supply", msg->versionLength);
             break;
 
         case VENUS_REDEEM:
-            strlcpy(msg->version, "Redeem", msg->versionLength);
+            strlcpy(msg->version, "Withdraw", msg->versionLength);
             break;
 
         case VENUS_REDEEM_UNDERLYING:
-            strlcpy(msg->version, "Redeem underlying", msg->versionLength);
+            strlcpy(msg->version, "Withdraw", msg->versionLength);
             break;
 
         case VENUS_BORROW:
@@ -35,11 +39,12 @@ void handle_query_contract_id(void *parameters) {
             break;
 
         case VENUS_REPAY_BORROW:
+        case VENUS_REPAY_BORROW_BNB:
             strlcpy(msg->version, "Repay", msg->versionLength);
             break;
 
         case VENUS_REPAY_BORROW_ON_BEHALF:
-            strlcpy(msg->version, "Repay on behalf", msg->versionLength);
+            strlcpy(msg->version, "Repay", msg->versionLength);
             break;
 
         // *** Comptroller ***
@@ -53,36 +58,44 @@ void handle_query_contract_id(void *parameters) {
 
         // *** Vaults ***
         case VAULT_DEPOSIT:
-            strlcpy(msg->version, "Stake", msg->versionLength);
+            //using ticker of token being deposited for vault name  eg. VAI or VRT
+            strlcpy(msg->version, context->ticker_sent, msg->versionLength); 
+            strlcat(msg->version, " vault", msg->versionLength); 
             break;
         
         case VAULT_DEPOSIT_TOKEN:
-            strlcpy(msg->version, "Stake", msg->versionLength);
+            strlcpy(msg->version, "XVS vault", msg->versionLength);
             break;
 
         case VAULT_WITHDRAW_TOKEN_EXECUTE:
-            strlcpy(msg->version, "Execute withdraw", msg->versionLength);
+            strlcpy(msg->version, "XVS vault", msg->versionLength);
             break;
 
         case VAULT_WITHDRAW_TOKEN_REQUEST:
-            strlcpy(msg->version, "Request withdraw", msg->versionLength);
+            strlcpy(msg->version, "XVS vault", msg->versionLength);
             break;
 
         case VAULT_WITHDRAW_VAI:
-            strlcpy(msg->version, "Withdraw VAI", msg->versionLength);
+            strlcpy(msg->version, "VAI vault", msg->versionLength);
             break;
 
-        case VAULT_WITHDRAW_VRT:
-            strlcpy(msg->version, "Wthdraw VRT", msg->versionLength);
+        case VAULT_WITHDRAW_VRTXVS:
+            strlcpy(msg->version, context->ticker_sent, msg->versionLength); 
+            strlcat(msg->version, " vault withdraw", msg->versionLength); 
             break;
 
         case VAULT_CLAIM:
-            strlcpy(msg->version, "Claim reward", msg->versionLength);
+            strlcpy(msg->version, context->ticker_sent, msg->versionLength); 
+            strlcat(msg->version, " vault", msg->versionLength); 
+            /*TODO display VAI or VRT before "vault" - but there is no way we know which one
+                   as the method is the same for each vault and has no paramters eg. claim()
+                   Removed from spec for now 
+            */
             break;
 
         // *** Governance ***
         case VENUS_DELEGATE_VOTE:
-            strlcpy(msg->version, "Delegate voting power", msg->versionLength);
+            strlcpy(msg->version, "Delegate vot. power", msg->versionLength);
             break;
 
         case VENUS_MAKE_PROPOSAL:
@@ -96,11 +109,7 @@ void handle_query_contract_id(void *parameters) {
 
         // *** Convert ***
         case VENUS_CONVERT_VRT:
-            strlcpy(msg->version, "Convert", msg->versionLength);
-            break;
-
-        case VENUS_WITHDRAW_VESTED_XVS:
-            strlcpy(msg->version, "Withdraw XVS", msg->versionLength);
+            strlcpy(msg->version, "Convert VRT to XVS", msg->versionLength);
             break;
 
         // *** Swap

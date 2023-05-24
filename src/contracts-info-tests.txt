@@ -1,0 +1,12 @@
+// Address of venus contracts and tokens on Bnb-testnet - imcomplete as tests run with emulator can be run on the mainnet
+// 
+// from bnb-testnet - repeat incomplete as not really needed
+//_VENUS("0xb7526572FFE56AB9D7489838Bf2E18e3323b441A", "vUSDT", 8, "USDT", 18)
+//_VENUS("0x08e0A5575De71037aE36AbfAfb516595fE68e5e4", "vBUSD", 8, "BUSD", 18)
+//_VENUS("0x6d6F697e34145Bb95c54E77482d97cc261Dc237E", "vXVS", 8, "XVS", 18)
+
+// from bnb-mainnet - no point running on testnet - all test transactions are will not succeed onchain using the Emulator Address
+_VENUS("0xfD5840Cd36d94D7229439859C0112a4185BC0255", "vUSDT", 8, "USDT", 18)
+_VENUS("0x95c78222B3D6e262426483D42CfA53685A67Ab9D", "vBUSD", 8, "BUSD", 18)
+_VENUS("0xA07c5b74C9B40447a954e1466938b865b6BBea36", "vBNB", 8, "BNB", 18)
+_VENUS("0x151B1e2635A717bcDc836ECd6FbB62B674FE3E1D", "vXVS", 8, "XVS", 18)

@@ -34,7 +34,7 @@ const nano_models: DeviceModel[] = [
 ];
 
 
-const boilerplateJSON = generate_plugin_config();
+const venusJSON = generate_plugin_config();
 
 const SPECULOS_ADDRESS = '0xFE984369CE3919AA7BB4F431082D027B4F8ED70C';
 const RANDOM_ADDRESS = '0xaaaabbbbccccddddeeeeffffgggghhhhiiiijjjj'
@@ -45,7 +45,7 @@ let genericTx = {
     gasLimit: Number(21000),
     gasPrice: parseUnits('1', 'gwei'),
     value: parseEther('1'),
-    chainId: 1,
+    chainId: 56,
     to: RANDOM_ADDRESS,
     data: null,
 };
@@ -87,8 +87,8 @@ function zemu(device, func) {
         let elf_path;
         let lib_elf;
         elf_path = device.eth_path;
-        // Edit this: replace `Boilerplate` by your plugin name
-        lib_elf = { 'Boilerplate': device.path };
+
+        lib_elf = { 'Venus': device.path };
 
         const sim = new Zemu(elf_path, lib_elf);
         try {
@@ -97,7 +97,7 @@ function zemu(device, func) {
             const eth = new Eth(transport);
             eth.setLoadConfig({
                 baseURL: null,
-                extraPlugins: boilerplateJSON,
+                extraPlugins: venusJSON,
             });
             await func(sim, eth);
         } finally {

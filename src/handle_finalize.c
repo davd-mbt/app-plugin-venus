@@ -2,8 +2,8 @@
 
 /* Load any Venus specific contracts we may need*/
 
-#define _VENUS(address, underlying_ticker, underlying_decimals, vault_ticker, vault_decimals) \
-    {address, underlying_ticker, underlying_decimals, vault_ticker, vault_decimals},
+#define _VENUS(address, v_ticker, v_decimals, underlying_ticker, underlying_decimals) \
+    {address, v_ticker, v_decimals, underlying_ticker, underlying_decimals},
 
 const contract_info_t contracts[] = {
 
@@ -26,8 +26,13 @@ contract_info_t *find_contract_info(const char *address) {
     PRINTF("Contracts length: %d\n", len);
     for (int i = 0; i < len; i++) {
         contract_info_t *ci = &contracts[i];
-        if (memcmp(address, (char *) PIC(ci->address), 42) == 0) return ci;
+        PRINTF("Contracts list: %s\n", (char *) PIC(ci->address));
+        if (memcmp(address, (char *) PIC(ci->address), 42) == 0) {
+            PRINTF("Contract FOUND in local lookup: %s\n", address);
+            return ci;        
+        }
     }
+    PRINTF("Contract NOT FOUND: %s\n", address);
     // when contract is not found
     return NULL;
 }
@@ -42,11 +47,7 @@ void handle_finalize(void *parameters) {
 
     // Set Max Number of screens - 
 
-    msg->numScreens = 2;
-    // If the beneficiary is NOT the sender, we will need an additional screen to display it.
-    if (memcmp(msg->address, context->beneficiary, ADDRESS_LENGTH) != 0) {
-        msg->numScreens += 1;
-    }
+    msg->numScreens = 1;
 
     // set `tokenLookup1` (and maybe `tokenLookup2`) to point to
     // token addresses you will info for (such as decimals, ticker...).
@@ -61,16 +62,76 @@ void handle_finalize(void *parameters) {
     
     // TODO: started this for vToken, havent done Vaults, testing will reveal more but 'rain-stopped-play'
 
-    char *addr = context->contract_address_sent;
+    // We need a random chainID for legacy reasons with `getEthAddressStringFromBinary` and `getEthDisplayableAddress`.
+    // Setting it to `0` will make it work with every chainID :)
+    uint64_t chainId = 0;
+
+
+    // Using getEthAddressStringFromBinary
+
+    //handle_provide_parameter.c will set context->contract_address_xxx fields
+    //selectors with no parameters would not of called provide_parameters
+
+    // addr to lookup
+    char addr[42];     //was char *addr=context->contract_address_sent;
     addr[0] = '0';
     addr[1] = 'x';
 
-    uint64_t chainId = 0;
-    getEthAddressStringFromBinary(msg->pluginSharedRO->txContent->destination,
+    // for debug
+    printf_hex_array("Destination Address: ", ADDRESS_LENGTH, msg->pluginSharedRO->txContent->destination); // contract address or users address
+    printf_hex_array("Context Address Sent: ", ADDRESS_LENGTH, context->contract_address_sent);             // set by handle_provide_parameter
+    printf_hex_array("Context Address Received: ", ADDRESS_LENGTH, context->contract_address_received);
+    printf_hex_array("Context Address Beneficiary: ", ADDRESS_LENGTH, context->beneficiary);
+
+    switch (context->selectorIndex) {
+        // vToken or vault contract address is in txContent->Destination
+        case VENUS_MINT_BNB:
+        case VENUS_MINT:
+        case VENUS_REDEEM:
+        case VENUS_REDEEM_UNDERLYING:
+        case VENUS_BORROW:
+        case VENUS_REPAY_BORROW:
+        case VENUS_REPAY_BORROW_BNB:
+        case VAULT_DEPOSIT:
+        case VAULT_WITHDRAW_VAI:
+        case VAULT_WITHDRAW_VRTXVS:
+        case VAULT_CLAIM:
+        case VENUS_MINT_VAI:
+        case VENUS_REPAY_VAI:        
+
+            // lookup address in destination
+            getEthAddressStringFromBinary(msg->pluginSharedRO->txContent->destination,
                                   addr + 2,  // +2 here because we've already prefixed with '0x'.
                                   msg->pluginSharedRW->sha3,
                                   chainId);
-    PRINTF("MSG Address: %s\n", addr);
+            break;
+
+        case VENUS_REPAY_BORROW_ON_BEHALF:
+        case VENUS_PROVIDE_COLLATERAL:
+        case VENUS_REMOVE_COLLATERAL:
+            // lookup address in address_sent
+            getEthAddressStringFromBinary(context->contract_address_sent,
+                                  addr + 2,  // +2 here because we've already prefixed with '0x'.
+                                  msg->pluginSharedRW->sha3,
+                                  chainId);
+            
+            break;            
+    }
+
+    PRINTF("New Addr String: %s\n", addr);
+
+    // Get the string representation of the address stored in `context->beneficiary`. Put it in
+    // `msg->msg`.
+
+    /* Using GetEthDisplayableAddress
+    getEthDisplayableAddress(
+        msg->pluginSharedRO->txContent->destination,
+        context->contract_address_sent,
+        sizeof(context->contract_address_sent),
+        msg->pluginSharedRW->sha3,
+        chainId);
+    */
+    msg->tokenLookup2 = NULL;
 
     contract_info_t *info = find_contract_info(addr);
 
@@ -78,41 +139,89 @@ void handle_finalize(void *parameters) {
 
         // *** Bep20
         case BEP20_APPROVE:
+            // TODO check to see differences between tsContent->destination and context->contract_address_sent
             msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
-            msg->tokenLookup2 = context->contract_address_received;  //address spender
+            //msg->tokenLookup1 = context->contract_address_sent;
+            // not using spender msg->tokenLookup2 = context->contract_address_received;  //address spender
             break;
 
-        // *** Venus vTokens
+        // *** Venus vTokens        
+        case VENUS_MINT_BNB:
         case VENUS_MINT:
-        case VENUS_REDEEM:
-        case VENUS_REDEEM_UNDERLYING:
-        case VENUS_BORROW:
-        case VENUS_REPAY_BORROW:
             if (info) {                         // Found a local lookup in info, to display underlying ticker
                 strlcpy(context->ticker_sent,
                        (char *) PIC(info->underlying_ticker),
                        sizeof(context->ticker_sent));
                 context->decimals_sent = info->underlying_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            } else {
+                msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
+            }
+            break;
+
+        case VENUS_REDEEM:
+            if (info) {                         // Found a local lookup in info, to display actual ticker for redeem
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->v_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->v_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            } else {
+                msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
+            }
+            break;
+
+        case VENUS_REDEEM_UNDERLYING:
+        case VENUS_BORROW:
+        case VENUS_REPAY_BORROW:
+        case VENUS_REPAY_BORROW_BNB:
+            if (info) {                         // Found a local lookup in info, to display underlying ticker
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->underlying_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->underlying_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
             } else {
                 msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
             }
             break;
 
         case VENUS_REPAY_BORROW_ON_BEHALF:
-            msg->tokenLookup1 = context->contract_address_sent; // address vBnb
+            if (info) {                         // Found a local lookup in info, to display underlying ticker
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->underlying_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->underlying_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            } else {
+                msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
+            }
             break;
 
         case VENUS_PROVIDE_COLLATERAL:
-            //msg->tokenLookup1 = context->contract_address_sent; TODO: when provide_parameter has passed address[] array
-            break;
-
         case VENUS_REMOVE_COLLATERAL:
-            msg->tokenLookup1 = context->contract_address_sent; // vToken address
+            if (info) {                         // Found a local lookup in info, to display underlying ticker
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->underlying_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->underlying_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            } else {
+                msg->tokenLookup1 = context->contract_address_sent; //was txContent->destination
+            }
             break;
 
         // *** Vaults ***
         case VAULT_DEPOSIT:
-            // ?? msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
+            if (info) {                         // Found a local lookup in info, to display underlying ticker
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->v_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->v_decimals;
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            } else {
+                msg->tokenLookup1 = msg->pluginSharedRO->txContent->destination;
+            }
             break;
         
         case VAULT_DEPOSIT_TOKEN:
@@ -122,20 +231,41 @@ void handle_finalize(void *parameters) {
             break;
 
         case VAULT_WITHDRAW_VAI:
-        case VAULT_WITHDRAW_VRT:               
+        case VAULT_WITHDRAW_VRTXVS:
         case VAULT_CLAIM:
+            if (info) {                         // Found a local lookup in info, to display v_ticker as vault name
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->v_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->v_decimals;
+                                                //  underlying ticker is reward token we are receiving
+                strlcpy(context->ticker_received,
+                       (char *) PIC(info->underlying_ticker),
+                       sizeof(context->ticker_received));
+                context->decimals_sent = info->underlying_decimals;
+
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            }
             break;            
 
         // *** Governance ***
         case VENUS_DELEGATE_VOTE:
+            break;
+            
         case VENUS_MAKE_PROPOSAL:
+            msg->numScreens = context->decimals_sent;
+            break;
+
         case VENUS_CAST_VOTE:
+            msg->numScreens += 1; // Default is 1 need to be 2
+            break;
+
         case VENUS_VOTE_WITH_REASON:
+            msg->numScreens += 2; // Default is 1 need to be 3
             break;
 
         // *** Convert ***
         case VENUS_CONVERT_VRT:
-        case VENUS_WITHDRAW_VESTED_XVS:
             break;
 
         // *** Swap ***
@@ -158,13 +288,44 @@ void handle_finalize(void *parameters) {
         // *** VAI ***
         case VENUS_MINT_VAI:
         case VENUS_REPAY_VAI:        
-            break;
+            if (info) {                         // Found a local lookup in info, to display v_ticker as vault name
+                strlcpy(context->ticker_sent,
+                       (char *) PIC(info->v_ticker),
+                       sizeof(context->ticker_sent));
+                context->decimals_sent = info->v_decimals;
+                                                //  underlying ticker is reward token we are receiving
+                strlcpy(context->ticker_received,
+                       (char *) PIC(info->underlying_ticker),
+                       sizeof(context->ticker_received));
+                context->decimals_sent = info->underlying_decimals;
+
+                PRINTF("Using contracts-info.txt: %s\n", context->ticker_sent);
+            }
+            break;            
+
 
         // Keep this
         default:
             PRINTF("Missing selectorIndex: %d\n", context->selectorIndex);
             msg->result = ETH_PLUGIN_RESULT_ERROR;
             return;
+    }
+
+    switch (context->selectorIndex) {
+        // Set number of screens if swap 
+        case SWAP_EXACT_TOKENS_FOR_TOKENS:
+        case SWAP_TOKENS_FOR_EXACT_TOKENS:
+        case SWAP_EXACT_ETH_FOR_TOKENS:
+        case SWAP_ETH_FOR_EXACT_TOKENS:
+        case SWAP_EXACT_TOKENS_FOR_ETH:
+        case SWAP_TOKENS_FOR_EXACT_ETH:
+            msg->numScreens += 1; // Default is 1 need to be 2
+
+            // If the beneficiary is NOT the sender, we will need an additional screen to display it.
+            if (memcmp(msg->address, context->beneficiary, ADDRESS_LENGTH) != 0) {
+              msg->numScreens += 1;
+            }
+            break;
     }
 
     msg->result = ETH_PLUGIN_RESULT_OK;
