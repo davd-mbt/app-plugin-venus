@@ -71,16 +71,16 @@ main() {
     fi
 
     echo "* Building elfs for Nano S..."
-    build_ethereum "S"
     build_plugin "S"
-
+    build_ethereum "S"
+    
     echo "* Building elfs for Nano X..."
-    build_ethereum "X"
     build_plugin "X"
+    build_ethereum "X"
 
     echo "* Building elfs for Nano S Plus..."
-    build_ethereum "SP"
     build_plugin "SP"
+    build_ethereum "SP"
 
     echo "* Done"
 }
