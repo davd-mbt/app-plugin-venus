@@ -2,6 +2,13 @@
     "chainId": 56,
     "contracts": [
         {
+            "address": "0x55d398326f99059ff775485246999027b3197955",
+            "contractName": "BEP20USDT",
+            "selectors": {
+                "0x095ea7b3": {"erc20OfInterest": ["spender"],"method": "approve","plugin": "Venus"}
+	        }
+        },        
+        {
             "address": "0xfd5840cd36d94d7229439859c0112a4185bc0255",
             "contractName": "VBep20Delegator",
             "selectors": { 
