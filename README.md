@@ -10,7 +10,7 @@ transaction data and displaying its content in a human readable way. This is
 done on a "per contract" basis, meaning a plugin is required for every DApp.
 
 app-plugin-venus was built from the forkable app-plugin-boilerplate following the 
-[plugin guide](https://developers.ledger.com/docs/dapp/nano-plugin/overview/)
+[plugin guide](https://developers.ledger.com/docs/dapp/embedded-plugin/overview/)
 
 It is STRONGLY recommended to follow the guide in order to better understand the flow and the context for plugins.
 
