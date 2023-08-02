@@ -48,7 +48,7 @@ void handle_init_contract(void *parameters) {
 
         // *** Bep20
         case BEP20_APPROVE:
-            context->next_param = BEP20_APPROVE;
+            context->next_param = APPROVE_SPENDER;
             break;
 
         // *** Venus vTokens and vBNB
